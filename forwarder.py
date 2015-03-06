@@ -1,8 +1,9 @@
 #!/usr/bin/python
-CFG_NAME: "forward.conf"
+
+CFG_NAME = "forward.conf"
 
 def main():
-	routes = list[]
+	routes = []
 	for line in file(CFG_NAME):
 		parts = line.split(":")
 		routes.append((int(parts[0]), parts[1], int(parts[2])))
