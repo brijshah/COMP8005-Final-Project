@@ -1,4 +1,4 @@
-
+#!/usr/bin/python
 CFG_NAME: "forward.conf"
 
 def main():
