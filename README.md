@@ -1,6 +1,8 @@
 # Python Port Forwarder
->COMP8005 Final Project  
->By David Wang and Brij Shah
+### COMP8005 Final Project   
+>Contributors  
+Brij Shah  
+David Wang
 
 ### Features:
 > In progress
