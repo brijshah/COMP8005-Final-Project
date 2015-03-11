@@ -11,8 +11,15 @@ def main():
 
 	while True:
 		client, client_addr = server.accept()
-		data = client.recv(1024)
-		print data
+		while True:
+			data = client.recv(BUF_SIZE)
+			if data == "":
+				print "Client disconnected"
+				break
+			else:
+				print data
+		client.close()
+
 
 if __name__ == '__main__':
 	if(len(sys.argv) is not 3):
@@ -21,6 +28,6 @@ if __name__ == '__main__':
 		sys.exit()
 	else:
 		SERVER_IP = sys.argv[1]
-		SERVER_PORT = sys.argv[2]
+		SERVER_PORT = int(sys.argv[2])
 
 	main()
