@@ -18,6 +18,8 @@ def main():
 				break
 			else:
 				print data
+				data = "Received: %s" % data
+				client.sendall(data)
 		client.close()
 
 

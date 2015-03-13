@@ -19,13 +19,6 @@ class ProxyServer:
 		self.srv_socket.bind((HOST, port))
 		self.srv_socket.listen(5)
 
-	# def __init__(self, connip, connport, destip, destport):
-	# 	self.connip = connip
-	# 	self.connport = connport
-	# 	self.destip = destip
-	# 	self.destport = destport
-	# 	self.clients = []
-
 	# 	print "Starting server on %s port %s" % (HOST, self.connport)
 	# 	self.srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 	# 	self.srv_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -49,29 +42,27 @@ class ProxyServer:
 							for path in ROUTES[self.port]:
 								if path[0] == address[0]:
 									self.destinations[conn] = self.connect_dest(path[1], path[2])
+									clients.append(self.destinations[conn])
 						except socket.error:
 							clients.remove(sockets)
-					elif sockets in clients:
+					else:
 						data = sockets.recv(1024)
+						socket_info = sockets.getpeername()
 						if data == "":
 							clients.remove(sockets)
-							print "%s has disconnected" % sockets.getpeername()[1]
+							print "%s:%s has disconnected" % socket_info
 							sockets.close()
 						else:
 							# Determine where to forward to
 							for path in ROUTES[self.port]:
-								if sockets.getpeername()[0] == path[0]:
-									print "%s: %s" % (sockets.getpeername(), data)
+								if socket_info[0] == path[0]:
+									print "%s: %s" % (socket_info, data)
 									self.destinations[sockets].sendall(data)
+									break
+								elif socket_info[0] == path[1]:
+									print "Got something back from destination"
 		finally:
-			# self.terminate_connection()
 			pass
-
-	def terminate_connection(self):
-		for sockets in self.clients:
-			sockets.close()
-		self.srv_socket.close()
-		self.dest_socket.close()
 
 	def connect_dest(self, dest_ip, dest_port):
 		print "Checking if %s:%s is available..." % (dest_ip, dest_port)
@@ -84,16 +75,6 @@ class ProxyServer:
 		print "\tConnected to %s:%s" % (dest_ip, dest_port)
 
 		return dest_socket
-
-	# def check_destination(self):
-	# 	print "Checking if %s:%s is available..." % (self.destip, self.destport)
-	# 	self.dest_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-	# 	try:
-	# 		self.dest_socket.connect((self.destip, self.destport))
-	# 	except socket.error:
-	# 		print "\tCould not connect to destination server..."
-	# 		return
-	# 	print "\tConnected to %s:%s" % (self.destip, self.destport)
 
 	# def handle_forward(self, from_sock, to_sock):
 	# 	data = from_sock.recv(BUF_SIZE)
@@ -112,7 +93,6 @@ def parse_config():
 			ROUTES[int(parts[1])].append([parts[0], parts[2], int(parts[3])])
 		except KeyError:
 			ROUTES[int(parts[1])] = [route_data]
-		# ROUTES.append(ProxyServer(int(parts[0], int(parts[1]), parts[2], int(parts[3])))
 
 def main():
 	# Create config file if it doesn't exist
@@ -124,6 +104,7 @@ def main():
 		route = ProxyServer(int(port))
 		route_thread = threading.Thread(target=route.handle_accept)
 		THREADS.append(route_thread)
+		# Run threads as daemons
 		route_thread.daemon = True
 		route_thread.start()
 	while True:
