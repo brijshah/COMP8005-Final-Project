@@ -12,7 +12,6 @@ David Wang
 - Forwards data according to forwarding rules
 - Supports multiple servers and clients at the same time
 - Simple TCP server for testing purposes
+- Forwards an IP:Port pair to another IP:Port Pair
+- Supports two-way communication between source client and destination host
 
-### Needs work:
-- Should forward an IP:Port pair to another IP:Port pair. Currently forwards AnyIP:Port to SpecificIP:Port
-- Should support two-way communication between Source client and Destination host
