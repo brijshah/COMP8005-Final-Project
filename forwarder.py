@@ -71,7 +71,6 @@ class ProxyServer:
 		socket_info = src_socket.getpeername()
 		# print "Received %s from %s" % (data, socket_info)
 		if data == "":
-			print "%s:%s has disconnected" % socket_info
 			self.terminate_connection(Connected_Route(src_socket, dest_socket))
 			return
 		try:

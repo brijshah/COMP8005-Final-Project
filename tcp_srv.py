@@ -11,8 +11,6 @@ def accept_echo(client):
 			print "Client disconnected"
 			break
 		else:
-			print data
-			data = "Received: %s" % data
 			client.sendall(data)
 	client.close()
 
