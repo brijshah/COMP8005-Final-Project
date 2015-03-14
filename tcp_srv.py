@@ -1,7 +1,20 @@
-import socket, sys
+import socket, sys, threading
+
 SERVER_IP = ""
 SERVER_PORT = 0
 BUF_SIZE = 1024
+
+def accept_echo(client):
+	while True:
+		data = client.recv(BUF_SIZE)
+		if data == "":
+			print "Client disconnected"
+			break
+		else:
+			print data
+			data = "Received: %s" % data
+			client.sendall(data)
+	client.close()
 
 def main():
 	server = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -11,17 +24,7 @@ def main():
 
 	while True:
 		client, client_addr = server.accept()
-		while True:
-			data = client.recv(BUF_SIZE)
-			if data == "":
-				print "Client disconnected"
-				break
-			else:
-				print data
-				data = "Received: %s" % data
-				client.sendall(data)
-		client.close()
-
+		threading.Thread(target=accept_echo, args=[client,]).start()
 
 if __name__ == '__main__':
 	if(len(sys.argv) is not 3):
