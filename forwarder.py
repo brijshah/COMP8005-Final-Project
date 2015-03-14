@@ -1,13 +1,53 @@
 #!/usr/bin/python
 
+#-----------------------------------------------------------------------------
+#--	SOURCE FILE:	forwarder.py -   Python Proxy Server(Port Forwarder)
+#--
+#--	CLASSES:		ProxyServer
+#--					Connected_Route
+#--
+#--	FUNCTIONS:		ProxyServer:
+#--						handle_accept(self)
+#--						connect_dest(self, destp_ip, dest_port)
+#--						forward_data(self, src_socket, dest_socket)
+#--						terminate_connection(self, path_sockets)
+#--					Connected_Route:
+#--						parse_config()
+#--					main								
+#--
+#--	DATE:			March 14, 2015
+#--
+#--	DESIGNERS:		David Wang
+#--					Brij Shah
+#--
+#--	PROGRAMMERS:	David Wang
+#--					Brij Shah
+#--
+#--	NOTES:
+#--	
+#-----------------------------------------------------------------------------
+
 import threading, socket, sys, select
 
-CFG_NAME = "rules.conf"
+#Global Variables
 ROUTES = {}
 THREADS = []
 HOST = ""
 BUF_SIZE = 2048
 
+#Configuration File
+CFG_NAME = "rules.conf"
+
+#-----------------------------------------------------------------------------
+#-- CLASS:       	ProxyServer
+#--
+#-- FUNCTIONS:		handle_accept(self)
+#--					connect_dest(self, destp_ip, dest_port)
+#--					forward_data(self, src_socket, dest_socket)
+#--					terminate_connection(self, path_sockets)
+#--
+#-- NOTES: 			
+#-----------------------------------------------------------------------------
 class ProxyServer:
 
 	def __init__(self, port):
@@ -22,6 +62,14 @@ class ProxyServer:
 		self.srv_socket.bind((HOST, port))
 		self.srv_socket.listen(5)
 
+	#-----------------------------------------------------------------------------
+	#-- FUNCTION:       handle_accept
+	#--
+	#-- VARIABLES(S):   
+	#--
+	#-- NOTES:
+	#-- 
+	#-----------------------------------------------------------------------------
 	def handle_accept(self):
 		self.clients = [self.srv_socket]
 		while True:
@@ -55,6 +103,15 @@ class ProxyServer:
 							self.forward_data(sockets, conn_sock.src)
 							break
 
+	#-----------------------------------------------------------------------------
+	#-- FUNCTION:       connect_dest(self, dest_ip, dest_port)
+	#--
+	#-- VARIABLES(S):   dest_ip - 
+	#--					dest_port -
+	#--
+	#-- NOTES:
+	#-- 
+	#-----------------------------------------------------------------------------
 	def connect_dest(self, dest_ip, dest_port):
 		print "Checking if %s:%s is available..." % (dest_ip, dest_port)
 		dest_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -66,6 +123,15 @@ class ProxyServer:
 		print "\tConnected to %s:%s" % (dest_ip, dest_port)
 		return dest_socket
 
+	#-----------------------------------------------------------------------------
+	#-- FUNCTION:       forward_data(self, src_socket, dest_socket)
+	#--
+	#-- VARIABLES(S):   src_socket - 
+	#--					dest_socket - 
+	#--
+	#-- NOTES:
+	#-- 
+	#-----------------------------------------------------------------------------
 	def forward_data(self, src_socket, dest_socket):
 		data = src_socket.recv(BUF_SIZE)
 		socket_info = src_socket.getpeername()
@@ -79,6 +145,14 @@ class ProxyServer:
 			print "Destination unavailable, disconnecting sockets"
 			self.terminate_connection(Connected_Route(src_socket, dest_socket))
 
+	#-----------------------------------------------------------------------------
+	#-- FUNCTION:       terminate_connection(self, path_sockets)
+	#--
+	#-- VARIABLES(S):   path_sockets - 
+	#--
+	#-- NOTES:
+	#-- 
+	#-----------------------------------------------------------------------------
 	def terminate_connection(self, path_sockets):
 		source = path_sockets.src
 		destination = path_sockets.src
@@ -92,11 +166,24 @@ class ProxyServer:
 		source.close()
 		destination.close()
 
+#-----------------------------------------------------------------------------
+#-- CLASS:       	Connected_Route
+#--
+#-- FUNCTIONS:		parse_config()
+#--
+#-- NOTES: 			
+#-----------------------------------------------------------------------------
 class Connected_Route():
 	def __init__(self, src_socket, dest_socket):
 		self.src = src_socket
 		self.dest = dest_socket
 
+#-----------------------------------------------------------------------------
+#-- FUNCTION:       parse_config()
+#--
+#-- NOTES:
+#-- 
+#-----------------------------------------------------------------------------
 def parse_config():
 	for line in file(CFG_NAME):
 		parts = line.split()
@@ -105,7 +192,13 @@ def parse_config():
 			ROUTES[int(parts[1])].append(route_data)
 		except KeyError:
 			ROUTES[int(parts[1])] = [route_data]
-
+#-----------------------------------------------------------------------------
+#-- FUNCTION:       main()
+#--
+#-- NOTES:
+#-- Main function of the program
+#--
+#-----------------------------------------------------------------------------
 def main():
 	# Create config file if it doesn't exist
 	# Parse config file
