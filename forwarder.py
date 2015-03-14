@@ -1,4 +1,5 @@
 #!/usr/bin/python
+
 import threading, socket, sys, select
 
 CFG_NAME = "rules.conf"
@@ -15,7 +16,7 @@ class ProxyServer:
 		self.destinations = {}
 		self.connected_paths = []
 
-		print "Starting server on %s port %s" % (HOST, self.port)
+		print "Starting server on port %s" % self.port
 		self.srv_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.srv_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 		self.srv_socket.bind((HOST, port))
@@ -29,23 +30,23 @@ class ProxyServer:
 			for sockets in readList:
 				# Ready to accept another client
 				if sockets == self.srv_socket:
-					try:
-						conn, address = sockets.accept()
-						for path in ROUTES[self.port]:
-							if path[0] == address[0]:
-								self.destinations[conn] = self.connect_dest(path[1], path[2])
-								if self.destinations[conn] is False:
-									conn.close()
-									break
-								conn.setblocking(0)
-								self.clients.append(conn)
-								self.clients.append(self.destinations[conn])
-								self.connected_paths.append(Connected_Route(conn, self.destinations[conn]))
+					# Accept the connection
+					conn, address = sockets.accept()
+					# Determine if it needs to be forwarded
+					for path in ROUTES[self.port]:
+						# If it's part of a forwarding rule
+						if path[0] == address[0] or path[0] == "*":
+							self.destinations[conn] = self.connect_dest(path[1], path[2])
+							if self.destinations[conn] is False:
+								conn.close()
 								break
-					except socket.error:
-						self.clients.remove(sockets)
+							conn.setblocking(0)
+							self.clients.append(conn)
+							self.clients.append(self.destinations[conn])
+							self.connected_paths.append(Connected_Route(conn, self.destinations[conn]))
+							break
 				else:
-					# Determine where to forward to
+					# Determine where to forward data 
 					for conn_sock in self.connected_paths:
 						if sockets == conn_sock.src:
 							self.forward_data(sockets, conn_sock.dest)
@@ -102,7 +103,7 @@ def parse_config():
 		parts = line.split()
 		route_data = [parts[0], parts[2], int(parts[3])]
 		try:
-			ROUTES[int(parts[1])].append([parts[0], parts[2], int(parts[3])])
+			ROUTES[int(parts[1])].append(route_data)
 		except KeyError:
 			ROUTES[int(parts[1])] = [route_data]
 
